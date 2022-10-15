@@ -5,44 +5,77 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 type Info struct {
-	input     []string
-	word      string
-	countWord int
-	logger    *log.Logger
+	input      []string
+	word       string
+	amountWord chan int
+	maxThreat  int
+	logger     *log.Logger
 }
 
-func (i *Info) Worker() {
-	var count int
+func (i *Info) Start() {
+	wgr := sync.WaitGroup{}
+	wgr.Add(1)
+	go i.readAndPrint(&wgr)
+
+	tokens := make(chan struct{}, i.maxThreat) // подсчитывающий семафор
+	wgw := sync.WaitGroup{}
 
 	for _, url := range i.input {
-		bodyResp, err := i.getRequest(url)
-		if err != nil {
-			i.logger.Println(err.Error())
-		}
+		tokens <- struct{}{}
 
-		count = strings.Count(bodyResp, i.word)
+		wgw.Add(1)
+		go i.worker(url, &wgw)
 
-		i.logger.Printf("count: %d", count)
-
-		i.countWord += count
+		<-tokens
 	}
+	wgw.Wait()
+	close(i.amountWord)
 
-	i.logger.Printf("full count: %d", i.countWord)
+	wgr.Wait()
+	// i.logger.Println("finish")
 }
 
-func (i *Info) getRequest(url string) (string, error) {
+func (i *Info) worker(url string, wg *sync.WaitGroup) {
+	body := i.getRequest(url)
+
+	count := i.countWord(body)
+
+	i.amountWord <- count
+
+	i.logger.Printf("Count for %s: %d", url, count)
+
+	wg.Done()
+}
+
+func (i *Info) getRequest(url string) string {
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		i.logger.Fatalf("get failed: %s", err.Error())
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		i.logger.Fatalf("body read failed: %s", err.Error())
 	}
 
-	return string(body), nil
+	return string(body)
+}
+
+func (i *Info) countWord(body string) int {
+	return strings.Count(body, i.word)
+}
+
+func (i *Info) readAndPrint(wg *sync.WaitGroup) {
+	var count int
+
+	for val := range i.amountWord {
+		count += val
+	}
+
+	i.logger.Printf("Total: %d", count)
+	wg.Done()
 }

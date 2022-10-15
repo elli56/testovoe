@@ -5,16 +5,22 @@ import (
 )
 
 func main() {
-	input := []string{"https://golang.org", "https://golang.org", "https://golang.org", "https://golang.org", "https://golang.org", "https://golang.org", "https://golang.org"}
+	input := []string{
+		"https://golang.org",
+		"https://habr.com/ru/post/490336/",
+	}
+
 	word := "Go"
 
 	logger := log.Default()
 
 	inf := Info{
-		input:  input,
-		word:   word,
-		logger: logger,
+		input:      input,
+		word:       word,
+		amountWord: make(chan int),
+		maxThreat:  5,
+		logger:     logger,
 	}
 
-	inf.Worker()
+	inf.Start()
 }
