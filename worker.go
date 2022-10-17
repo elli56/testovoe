@@ -28,9 +28,7 @@ func (i *Info) Start() {
 		tokens <- struct{}{}
 
 		wgw.Add(1)
-		go i.worker(url, &wgw)
-
-		<-tokens
+		go i.worker(url, &wgw, tokens)
 	}
 	wgw.Wait()
 	close(i.amountWord)
@@ -39,7 +37,7 @@ func (i *Info) Start() {
 	// i.logger.Println("finish")
 }
 
-func (i *Info) worker(url string, wg *sync.WaitGroup) {
+func (i *Info) worker(url string, wg *sync.WaitGroup, tokens chan struct{}) {
 	body := i.getRequest(url)
 
 	count := i.countWord(body)
@@ -49,6 +47,8 @@ func (i *Info) worker(url string, wg *sync.WaitGroup) {
 	i.logger.Printf("Count for %s: %d", url, count)
 
 	wg.Done()
+
+	<-tokens
 }
 
 func (i *Info) getRequest(url string) string {

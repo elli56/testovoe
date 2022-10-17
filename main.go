@@ -7,6 +7,24 @@ import (
 func main() {
 	input := []string{
 		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://habr.com/ru/post/490336/",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://habr.com/ru/post/490336/",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://habr.com/ru/post/490336/",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
+		"https://golang.org",
 		"https://habr.com/ru/post/490336/",
 	}
 
